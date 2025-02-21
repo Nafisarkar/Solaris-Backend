@@ -1,70 +1,74 @@
 const mongoose = require("mongoose");
+const { v4: uuidv4 } = require("uuid");
 
-const productSchema = new mongoose.Schema(
+const singleProductSchema = new mongoose.Schema(
   {
-    name: {
+    variantId: {
       type: String,
+      default: () => uuidv4(),
       required: true,
-      validate: [
-        {
-          validator: function (value) {
-            return value.length >= 3;
-          },
-          message: "Name must be at least 3 characters",
-        },
-      ],
+      // removed unique: true as it causes issues with embedded documents
+    },
+    packfrontimage: {
+      type: String,
+      required: [true, "Front image is required"],
+    },
+    packtitle: {
+      type: String,
+      required: [true, "Title is required"],
     },
     description: {
       type: String,
-      required: true,
-      validate: [
-        {
-          validator: function (value) {
-            return value.length >= 3;
-          },
-          message: "Description must be at least 3 characters",
-        },
-      ],
+      default: "",
     },
-    size: {
-      type: String,
-      required: true,
+    allimagesinpack: {
+      type: [String],
+      default: [],
     },
-    exclusive: {
-      type: Boolean,
-      required: true,
-      default: false,
+    quantity: {
+      type: Number,
+      default: 12,
     },
     price: {
       type: Number,
-      required: true,
+      required: [true, "Price is required"],
     },
-    imageUrls: {
-      type: [String],
-      required: true,
-      default: [],
+  },
+  { _id: false }
+);
+
+const productSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: [true, "Title is required"],
+      minLength: [3, "Title must be at least 3 characters"],
+    },
+    subtitle: {
+      type: String,
+      required: [true, "Subtitle is required"],
+      minLength: [3, "Subtitle must be at least 3 characters"],
     },
     category: {
       type: String,
-      required: true,
-      default: "",
+      default: "other",
+      required: [true, "Category is required"],
     },
-    rating: {
-      type: Number,
-      default: 0,
-    },
-    numReviews: {
-      type: Number,
-      default: 0,
-    },
-    containsItem: {
-      type: Number,
-      default: 0,
+    variants: [singleProductSchema],
+    defaultVariant: {
+      type: String, // Store the variantId of the default variant
+      ref: "variants.variantId",
     },
   },
   {
     timestamps: true,
   }
+);
+
+// Add a compound index on parent document to ensure unique variantIds within a product
+productSchema.index(
+  { "variants.variantId": 1 },
+  { unique: true, sparse: true }
 );
 
 module.exports = mongoose.model("Product", productSchema);
