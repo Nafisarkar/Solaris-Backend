@@ -3,6 +3,7 @@ const { verifyUserToken } = require("./webtoken");
 const userScopeValidator = async (req, res, next) => {
   try {
     const cookie = req.cookies["cookie"];
+
     if (!cookie) {
       return res.status(401).json({
         from: "userScopeValidator",
@@ -10,6 +11,7 @@ const userScopeValidator = async (req, res, next) => {
         message: "Unauthorized: No cookie found",
       });
     }
+    console.log(cookie);
     // check if the user is loged in or not
     try {
       const verificationResult = verifyUserToken(cookie);

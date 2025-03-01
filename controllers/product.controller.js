@@ -203,6 +203,58 @@ const deleteAllProduct = async (req, res) => {
   }
 };
 
+const deleteAProductVariantById = async (req, res) => {
+  try {
+    const { pid, vid } = req.params;
+
+    const product = await productModel.findById(pid);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    const variantIndex = product.variants.findIndex(
+      (variant) => variant.variantId === vid
+    );
+
+    if (variantIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Variant not found",
+      });
+    }
+
+    // Handle default variant update
+    if (product.defaultVariant === vid) {
+      // If deleted variant was default, set new default to first available variant
+      product.defaultVariant =
+        product.variants.length > 1
+          ? product.variants[variantIndex === 0 ? 1 : 0].variantId
+          : null;
+    }
+
+    // Remove the variant
+    product.variants.splice(variantIndex, 1);
+
+    const updatedProduct = await product.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Product variant deleted successfully",
+      data: updatedProduct,
+      deletedVariantId: vid,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 const deleteProductById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -238,5 +290,6 @@ module.exports = {
   getProductVariantById,
   updateProductById,
   deleteAllProduct,
+  deleteAProductVariantById,
   deleteProductById,
 };

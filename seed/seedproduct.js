@@ -1,9 +1,11 @@
 const express = require("express");
 const { faker } = require("@faker-js/faker");
 const productModel = require("../models/product.model");
+const adminScopeValidator = require("../helper/adminScopeValidator");
+const userScopeValidator = require("../helper/userScopeValidator");
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+router.post("/", userScopeValidator, adminScopeValidator, async (req, res) => {
   try {
     const number = req.body.number || 2;
     const products = [];
