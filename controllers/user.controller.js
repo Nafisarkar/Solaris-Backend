@@ -61,7 +61,7 @@ const signupUser = async (req, res, next) => {
     const mailOptions = {
       from: process.env.SMTP_MAIL,
       to: req.body.email,
-      subject: "Email Verification [ PosterSmith ]",
+      subject: "Email Verification [ Solaris ]",
       html: activationMail(req.body.name, process.env.VARIFICATION_URL, token),
     };
 
