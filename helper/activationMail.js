@@ -22,7 +22,7 @@ const activationMail = (name, url, token) => {
       </div>
 
       <div style="max-width: 600px; margin: 20px auto 0; padding: 10px; background-color: #e9ecef; text-align: center; font-size: 12px; color: #868e96; border-radius: 0 0 10px 10px;">
-        © ${new Date().getFullYear()} PosterSmith. All rights reserved.
+        © ${new Date().getFullYear()} Solaris. All rights reserved.
       </div>
     </body>
   `;

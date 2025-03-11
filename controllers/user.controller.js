@@ -118,6 +118,7 @@ const createUser = async (req, res, next) => {
       success: true,
       message: "User created successfully",
       data: userVarification,
+      redirect: process.env.FRONTEND_URL,
     });
   } catch (error) {
     res.status(500).json({
