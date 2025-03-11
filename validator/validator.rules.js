@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+const { body } = require("express-validator");
 
 const signupValidatorRules = [
   body("name")
@@ -52,4 +52,4 @@ const loginValidatorRules = [
     ),
 ];
 
-export { signupValidatorRules, loginValidatorRules };
+module.exports = { signupValidatorRules, loginValidatorRules };
