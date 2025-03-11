@@ -13,26 +13,29 @@ const {
   deleteUserById,
   loginUser,
   logoutUser,
+  refreshToken, // Add this import
 } = require("../controllers/user.controller");
 const { validator } = require("../validator/validator.controller");
 const adminScopeValidator = require("../helper/adminScopeValidator");
 const userScopeValidator = require("../helper/userScopeValidator");
 
-//get all users
+// get all users
 router.get("/", userScopeValidator, adminScopeValidator, getAllUser);
-//sign up new user
+// sign up new user
 router.post("/signup", signupValidatorRules, validator, signupUser);
-//create user on the database
+// create user on the database
 router.get("/register", createUser);
-//login user and give a cookie
+// login user and give a cookie
 router.post("/login", loginValidatorRules, validator, loginUser);
-//logout user and remove a cookie
+// logout user and remove a cookie
 router.delete("/logout", logoutUser);
-//get a user by id
+// refresh token endpoint - no validators needed as we check the token inside
+router.post("/refresh", refreshToken); // Add this route
+// get a user by id
 router.get("/:id", userScopeValidator, adminScopeValidator, getUserById);
-//update a user by id
+// update a user by id
 router.put("/:id", userScopeValidator, adminScopeValidator, updateUserById);
-//delete a user by id
+// delete a user by id
 router.delete("/:id", adminScopeValidator, deleteUserById);
 
 module.exports = router;

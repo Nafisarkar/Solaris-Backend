@@ -137,10 +137,15 @@ const loginUser = async (req, res, next) => {
         message: "User not found",
       });
     }
+
     const isMatch = await bcryptjs.compare(req.body.password, user.password);
     if (!isMatch) {
-      throw next(createError(400, "Invalid password"));
+      return res.status(400).json({
+        success: false,
+        message: "Invalid password",
+      });
     }
+
     const cookieAuth = tokenCreate(
       {
         email: user.email,
@@ -149,10 +154,14 @@ const loginUser = async (req, res, next) => {
       "7d"
     );
 
+    // Set cookie with SameSite=None for cross-site requests
     res
       .cookie("cookie", cookieAuth, {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        path: "/",
       })
       .status(200)
       .json({
@@ -166,7 +175,7 @@ const loginUser = async (req, res, next) => {
           admin: user.admin,
           image: user.image,
         },
-        cookie: cookieAuth,
+        token: cookieAuth, // Return token in response body as well
       });
   } catch (error) {
     res.status(500).json({
@@ -276,6 +285,81 @@ const deleteUserById = async (req, res, next) => {
   }
 };
 
+const refreshToken = async (req, res, next) => {
+  try {
+    // Get token from multiple sources
+    const oldToken =
+      req.body.oldToken ||
+      req.cookies?.cookie ||
+      req.headers.authorization?.replace("Bearer ", "");
+
+    if (!oldToken) {
+      return res.status(401).json({
+        success: false,
+        message: "No token provided",
+      });
+    }
+
+    try {
+      // Verify the old token
+      const decoded = verifyUserToken(oldToken);
+
+      // Find the user
+      const user = await userMode.findOne({ email: decoded.email });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      // Create a new token
+      const newToken = tokenCreate(
+        {
+          email: user.email,
+          password: user.password,
+        },
+        "7d"
+      );
+
+      // Set the new token as a cookie and send it back
+      res
+        .cookie("cookie", newToken, {
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          path: "/",
+        })
+        .status(200)
+        .json({
+          success: true,
+          message: "Token refreshed successfully",
+          token: newToken,
+          data: {
+            email: user.email,
+            name: user.name,
+            address: user.address,
+            phone: user.phone,
+            admin: user.admin,
+            image: user.image,
+          },
+        });
+    } catch (tokenError) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or expired token",
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Token refresh failed",
+    });
+  }
+};
+
 module.exports = {
   getAllUser,
   signupUser,
@@ -285,4 +369,5 @@ module.exports = {
   deleteUserById,
   loginUser,
   logoutUser,
+  refreshToken,
 };

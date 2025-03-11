@@ -1,42 +1,46 @@
 const userModel = require("../models/user.model");
 const { verifyUserToken } = require("./webtoken");
+
 const userScopeValidator = async (req, res, next) => {
   try {
-    const cookie = req.cookies["cookie"];
+    // Check for token in multiple places
+    const token =
+      req.cookies?.cookie ||
+      req.headers.authorization?.replace("Bearer ", "") ||
+      req.query.token;
 
-    if (!cookie) {
+    if (!token) {
       return res.status(401).json({
-        from: "userScopeValidator",
         success: false,
-        message: "Unauthorized: No cookie found",
+        message: "Unauthorized: No token found",
       });
     }
-    console.log(cookie);
-    // check if the user is loged in or not
+
+    // Check if the user is logged in
     try {
-      const verificationResult = verifyUserToken(cookie);
+      const verificationResult = verifyUserToken(token);
       const user = await userModel.findOne({ email: verificationResult.email });
-      // if the user is an loged in, pass the request to the next middleware
+
       if (!user) {
         return res.status(401).json({
-          from: "userScopeValidator",
           success: false,
-          message: "Unauthorized: User not loged in",
+          message: "Unauthorized: User not found",
         });
       }
+
+      // Add the user to the request for later use
+      req.user = user;
       next();
     } catch (error) {
       return res.status(401).json({
-        from: "userScopeValidator",
         success: false,
         message: "Unauthorized: Invalid token",
       });
     }
   } catch (error) {
     res.status(500).json({
-      from: "userScopeValidator",
       success: false,
-      message: "error in userScopeValidator",
+      message: "Server error in authentication",
     });
   }
 };
