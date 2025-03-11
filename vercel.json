@@ -8,6 +8,10 @@
     {
       "src": "/(.*)",
       "dest": "/index.js"
+    },
+    {
+      "src": "/api/product",
+      "dest": "/routes/product.route.js"
     }
   ]
 }
